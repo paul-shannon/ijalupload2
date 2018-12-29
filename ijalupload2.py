@@ -17,7 +17,7 @@ from audioExtractor import *
 from text import *
 #----------------------------------------------------------------------------------------------------
 UPLOAD_DIRECTORY = "./UPLOADS"
-PROJECTS_DIRECTORY = "./PROJECTS"
+PROJECTS_DIRECTORY = "/tmp"
 #----------------------------------------------------------------------------------------------------
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
