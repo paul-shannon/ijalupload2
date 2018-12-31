@@ -10,6 +10,7 @@ import dash_table
 import yaml
 import io
 import webbrowser
+import dash_dangerously_set_inner_html as danger
 #----------------------------------------------------------------------------------------------------
 import sys
 sys.path.append("../ijal_interlinear")
@@ -17,7 +18,7 @@ from audioExtractor import *
 from text import *
 #----------------------------------------------------------------------------------------------------
 UPLOAD_DIRECTORY = "./UPLOADS"
-PROJECTS_DIRECTORY = "/tmp"
+PROJECTS_DIRECTORY = "PROJECTS"
 #----------------------------------------------------------------------------------------------------
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
@@ -63,6 +64,15 @@ def create_setTitleTab():
             'border-radius': '5px',
             'padding': '10px'}
 
+   rawDiv = html.Div([danger.DangerouslySetInnerHTML(''' <h1>Header</h1> ''')])
+
+   locationComponent = dcc.Location(id='url', refresh=False)
+   locationDisplay = dcc.Textarea(id="locationDisplay",
+                                  placeholder='location display goes here',
+                                  value="",
+                                  style={'width': 600, 'height': 100})
+
+
    setTitleInput = dcc.Input(id="setTitleTextInput",
                          placeholder='enter convenient, concise text title here, no spaces please!',
                          value="",
@@ -70,7 +80,13 @@ def create_setTitleTab():
 
    setTitleButton = html.Button(id='setTitleButton', type='submit', children='Submit')
 
+
    children = [html.Br(),
+               locationComponent,
+               locationDisplay,
+               html.Br(),
+               rawDiv,
+               html.Br(),
                setTitleInput,
                html.Br(),
                html.Br(),
@@ -238,14 +254,18 @@ def create_webPageCreationTab():
             'padding': '10px'}
 
    button =  html.Button('Create Web Page', id='createWebPageButton', style={"margin": "20px"})
+   linkToInterlinearText = dcc.Link('Navigate to text', href='/'),
 
    textArea = dcc.Textarea(id="createWebPageInfoTextArea",
                            placeholder='progress info will appear here',
                            value="",
-                           style={'width': 60, 'height': 30})
+                           style={'width': 200, 'height': 30})
 
-   webPageIframe = html.Iframe(id="storyIframe", src="<h3>the story goes here</h3>")
-   children = [html.Br(), html.Br(), button, html.Br(), html.Br(), textArea]
+   rawStarterText = '''<h3>interlinear text will appear here</h3>'''
+   webPageDisplay = html.Div(danger.DangerouslySetInnerHTML(rawStarterText),
+                             id="rawTextDisplay")
+   children = [html.Br(), html.Br(), button, html.Br(), html.Br(), textArea, webPageDisplay,
+               linkToInterlinearText]
 
    div = html.Div(children=children, id='createWebPageDiv', style={'display': 'block'})
 
@@ -546,15 +566,15 @@ def update_output(value):
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(
-    Output('createWebPageInfoTextArea', 'value'),
+    Output('rawTextDisplay', 'children'),
     [Input('createWebPageButton', 'n_clicks')],
     [State('sound_filename_hiddenStorage', 'children'),
      State('eaf_filename_hiddenStorage',   'children'),
      State('projectDirectory_hiddenStorage', 'children'),
      State('grammaticalTerms_filename_hiddenStorage', 'children'),
      State('tierGuide_filename_hiddenStorage', 'children')])
-def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
-                  grammaticalTermsFile, tierGuideFile):
+def display_content(n_clicks, soundFileName, eafFileName, projectDirectory,
+                    grammaticalTermsFile, tierGuideFile):
     if n_clicks is None:
         return("")
     print("--- create web page")
@@ -567,11 +587,13 @@ def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
     file = open(absolutePath, "w")
     file.write(html)
     file.close()
+
     #url = 'file:///%s' % absolutePath
 
-    url = 'http://0.0.0.0:8050/%s/text.html' % projectDirectory
-    webbrowser.open(url, new=2)
-    return("wrote file")
+    #url = 'http:/%s/text.html' % projectDirectory
+    #webbrowser.open(url, new=2)
+    htmlWrapped = danger.DangerouslySetInnerHTML(html)
+    return(htmlWrapped)
 
 
 #----------------------------------------------------------------------------------------------------
@@ -606,6 +628,14 @@ def update_output(projectTitle):
     if(not os.path.exists(projectDirectory)):
        os.mkdir(projectDirectory)
     return(projectDirectory)
+
+
+@app.callback(dash.dependencies.Output('locationDisplay', 'value'),
+              [dash.dependencies.Input('url', 'pathname')])
+def display_page(pathname):
+    return('You are on page {}'.format(pathname))
+
+
 
 #----------------------------------------------------------------------------------------------------
 def extractPhrases(soundFileFullPath, eafFileFullPath, projectDirectory):

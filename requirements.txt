@@ -7,4 +7,5 @@ dash_table
 pyyaml
 dash_core_components
 dash_html_components
+dash-dangerously-set-inner-html
 yattag

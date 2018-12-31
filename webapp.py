@@ -10,6 +10,9 @@ import dash_table
 import yaml
 import io
 import webbrowser
+from flask import Flask
+import flask
+
 #----------------------------------------------------------------------------------------------------
 import sys
 sys.path.append("../ijal_interlinear")
@@ -30,6 +33,24 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, static_fold
 app.title = "IJAL Text Upload"
 
 app.scripts.config.serve_locally = True
+
+#------------------------------------------------------------------------------------------------------------------------
+STATIC_PATH_fubar = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fubar')
+STATIC_PATH_fubar_audio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fubar', 'audio')
+#------------------------------------------------------------------------------------------------------------------------
+
+@app.server.route('/fubar/<resource>')
+def serve_static_html(resource):
+   print("--- serve_static_fubar")
+   print("resource:  %s" % resource)
+   return flask.send_from_directory(STATIC_PATH_fubar, resource)
+
+@app.server.route('/fubar/audio/<resource>')
+def serve_static_audio(resource):
+   print("--- serve_static_fubar_audio")
+   print("resource:  %s" % resource)
+   return flask.send_from_directory(STATIC_PATH_fubar_audio, resource)
+
 
 buttonStyle = {'width': '140px',
                'height': '60px',
@@ -237,15 +258,19 @@ def create_webPageCreationTab():
             'border-radius': '5px',
             'padding': '10px'}
 
-   button =  html.Button('Create Web Page', id='createWebPageButton', style={"margin": "20px"})
+   createButton =  html.Button('Create Web Page', id='createWebPageButton', style={"margin": "20px"})
+   displayButton =  html.Button('Display Web Page', id='displayIJALTextButton', style={"margin": "20px"})
+   downloadZipButton =  html.Button('Download Page', id='downloadIJALTextButton', style={"margin": "20px"})
 
    textArea = dcc.Textarea(id="createWebPageInfoTextArea",
                            placeholder='progress info will appear here',
                            value="",
-                           style={'width': 60, 'height': 30})
+                           style={'width': 600, 'height': 30})
 
-   webPageIframe = html.Iframe(id="storyIframe", src="<h3>the story goes here</h3>")
-   children = [html.Br(), html.Br(), button, html.Br(), html.Br(), textArea]
+   webPageIframe = html.Iframe(id="storyIFrame", src="<h3>the story goes here</h3>", width=1200, height=800)
+
+   children = [html.Br(), html.Br(), createButton, displayButton, downloadZipButton, html.Br(), html.Br(), textArea,
+               html.Br(), webPageIframe]
 
    div = html.Div(children=children, id='createWebPageDiv', style={'display': 'block'})
 
@@ -569,8 +594,8 @@ def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
     file.close()
     #url = 'file:///%s' % absolutePath
 
-    url = 'http://0.0.0.0:8050/%s/text.html' % projectDirectory
-    webbrowser.open(url, new=2)
+    #url = 'http://0.0.0.0:8050/%s/text.html' % projectDirectory
+    #webbrowser.open(url, new=2)
     return("wrote file")
 
 
@@ -606,6 +631,15 @@ def update_output(projectTitle):
     if(not os.path.exists(projectDirectory)):
        os.mkdir(projectDirectory)
     return(projectDirectory)
+
+@app.callback(
+    Output('storyIFrame', 'src'),
+    [Input('displayIJALTextButton', 'n_clicks')])
+def displayText(n_clicks):
+   if n_clicks is None:
+      return("")
+   return('/fubar/test.html')
+
 
 #----------------------------------------------------------------------------------------------------
 def extractPhrases(soundFileFullPath, eafFileFullPath, projectDirectory):
