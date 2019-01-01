@@ -39,18 +39,33 @@ STATIC_PATH_fubar = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fu
 STATIC_PATH_fubar_audio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fubar', 'audio')
 #------------------------------------------------------------------------------------------------------------------------
 
-@app.server.route('/fubar/<resource>')
-def serve_static_html(resource):
-   print("--- serve_static_fubar")
-   print("resource:  %s" % resource)
-   return flask.send_from_directory(STATIC_PATH_fubar, resource)
+@app.server.route('/PROJECTS/<path:urlpath>')
+def serve_static_file(urlpath):
+   print("--- serve_static_file")
+   print("urlpath:  %s" % urlpath)
+   fullPath = os.path.join("PROJECTS", urlpath)
+   dirname = os.path.dirname(fullPath)
+   filename = os.path.basename(fullPath)
+   print("about to send %s, %s" % (dirname, filename))
+   return flask.send_from_directory(dirname, filename)
 
-@app.server.route('/fubar/audio/<resource>')
-def serve_static_audio(resource):
-   print("--- serve_static_fubar_audio")
-   print("resource:  %s" % resource)
-   return flask.send_from_directory(STATIC_PATH_fubar_audio, resource)
 
+
+#@app.server.route('/fubar/<resource>')
+#def serve_static_html(resource):
+#   print("--- serve_static_fubar")
+#   print("resource:  %s" % resource)
+#   return flask.send_from_directory(STATIC_PATH_fubar, resource)
+
+# @app.server.route('/fubar/audio/<resource>')
+# def serve_static_audio(resource):
+# @app.server.route('/fubar/<path:urlpath>')
+# def serve_static_audio(urlpath):
+#    print("--- serve_static_fubar_audio")
+#    print("urlpath:  %s" % urlpath)
+#    pathJoined = os.path.join(STATIC_PATH_fubar, urlpath)
+#    print("joined:   %s" % pathJoined)
+#    return flask.send_from_directory(pathJoined)
 
 buttonStyle = {'width': '140px',
                'height': '60px',
@@ -634,11 +649,13 @@ def update_output(projectTitle):
 
 @app.callback(
     Output('storyIFrame', 'src'),
-    [Input('displayIJALTextButton', 'n_clicks')])
-def displayText(n_clicks):
+    [Input('displayIJALTextButton', 'n_clicks'),
+     Input('projectDirectory_hiddenStorage', 'children')])
+def displayText(n_clicks, projectDirectory):
    if n_clicks is None:
       return("")
-   return('/fubar/test.html')
+   pathToHTML = os.path.join(projectDirectory, "text.html")
+   return(pathToHTML)
 
 
 #----------------------------------------------------------------------------------------------------
