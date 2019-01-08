@@ -521,7 +521,7 @@ def on_grammaticalTermsUpload(contents, name, date, projectDirectory):
      State('projectTitle_hiddenStorage',   'children'),
      State('projectDirectory_hiddenStorage',   'children'),
     ])
-def update_output(n_clicks, soundFileName, eafFileName, projectTitle, projectDirectory):
+def extractSoundPhrases(n_clicks, soundFileName, eafFileName, projectTitle, projectDirectory):
     if n_clicks is None:
         return("")
     print("n_clicks: %d" % n_clicks)
@@ -620,7 +620,7 @@ def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
     [Input('setTitleButton', 'n_clicks'),
      Input('setTitleTextInput', 'value')]
     )
-def update_output(n_clicks, newTitle):
+def setTitle(n_clicks, newTitle):
     print("title callback")
     if n_clicks is None:
         print("n_clicks is None")
