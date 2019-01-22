@@ -12,7 +12,7 @@ import io
 import webbrowser
 from flask import Flask
 import flask
-
+from textwrap import dedent
 #----------------------------------------------------------------------------------------------------
 import sys
 sys.path.append("../ijal_interlinear")
@@ -85,12 +85,14 @@ def create_setTitleTab():
                          style={'width': '512px', 'fontSize': 20})
 
    setTitleButton = html.Button(id='setTitleButton', type='submit', children='Submit')
+#tierIDsBlankDiv = html.Div(children=[html.H4("blank")], id="tierIDsBlankDiv")
 
    children = [html.Br(),
                setTitleInput,
                html.Br(),
                html.Br(),
                setTitleButton
+               #tierIDsBlankDiv
                ]
 
    div = html.Div(children=children, id='setTitleDiv')
@@ -240,7 +242,7 @@ def create_associateEAFandSoundTab():
                            value="",
                            style={'width': 600, 'height': 300})
 
-   children = [html.Br(), html.Br(), button, html.Br(), html.Br(), textArea]
+   children = [html.Br(), button, html.Br(), textArea]
 
    div = html.Div(children=children, id='associateEAFandSoundDiv', style={'display': 'block'})
 
@@ -264,7 +266,7 @@ def create_webPageCreationTab():
 
    webPageIframe = html.Iframe(id="storyIFrame", src="<h3>the story goes here</h3>", width=1200, height=800)
 
-   children = [html.Br(), html.Br(), createButton, displayButton, downloadZipButton, html.Br(), html.Br(), textArea,
+   children = [html.Br(), createButton, displayButton, downloadZipButton, html.Br(), textArea,
                html.Br(), webPageIframe]
 
    div = html.Div(children=children, id='createWebPageDiv', style={'display': 'block'})
@@ -325,6 +327,34 @@ def create_uploadsDiv():
    return div
 
 #----------------------------------------------------------------------------------------------------
+def create_allDivs():
+
+   style = {'border': '1px solid purple',
+            'border-radius': '5px',
+            'padding': '1px'}
+
+
+   style = {'margin': 20,
+            'border': '1px solid #aaa;',
+            'border-radius': 4,
+            'padding': '.5em .5em 0'}
+
+   children = [
+       html.H4("IJAL Upload", style={'text-align': 'center'}),
+       html.Details([html.Summary('Set Title'), html.Div(create_setTitleTab())], style=style),
+       html.Details([html.Summary('EAF'), html.Div(create_eafUploaderTab())], style=style),
+       html.Details([html.Summary('Sound'), html.Div(create_soundFileUploaderTab())], style=style),
+       html.Details([html.Summary('Tier Map: upload from File'), html.Div(create_tierMapUploaderTab())], style=style),
+       html.Details([html.Summary('Tier Map: specify interactively'), html.Div(create_tierMapGui())], style=style),
+       html.Details([html.Summary('GrammaticalTerms'), html.Div(create_grammaticalTermsUploaderTab())], style=style),
+       html.Details([html.Summary('EAF+Sound'), html.Div(create_associateEAFandSoundTab())], style=style),
+       html.Details([html.Summary('Create Web Page'), html.Div(create_webPageCreationTab())], style=style)]
+
+   div = html.Div(children=children, id='main-div', className="twelve columns") # , style=style)
+
+   return div
+
+#----------------------------------------------------------------------------------------------------
 def create_tierMapDiv():
 
    style = {'border': '1px solid purple',
@@ -340,19 +370,88 @@ def create_tierMapDiv():
    return div
 
 #----------------------------------------------------------------------------------------------------
-def create_tierGuiTab():
+def create_tierMapGui():
 
    style = {'border': '1px solid purple',
             'border-radius': '5px',
             'padding': '10px'}
 
-   children = [html.Label('tierMapDiv'),
-               html.Label('tierMap upload'),
-               html.Label('tierMap display')]
+   helpText = dcc.Markdown(dedent('''
+There are four standard interlinear tiers.  We ask that you associate your tier names with them, using the
+dropdown menus below.
 
-   div = html.Div(children=children, id='tierMap-div', className="three columns", style=style)
+* speech
+* translation (into the linguist's language)
+* morpheme
+* morphemeGloss
+
+In addition, we ask you to specify whether morpheme's and their glosses are packed
+into a single eaf XML line (separated by tabs) or spread out over multiple xml elements.
+'''))
+
+
+   helpTextDisplay = html.Div(children=helpText,
+                        style={'margin': 100,
+                               'margin-top': 10,
+                               'margin-bottom': 10,
+                               'border': '1px solid gray',
+                               'border-radius': 5,
+                               'padding': 20,
+                               'width': "80%"})
+
+   #button = html.Button("Extract tier Ids", id="extractTierIDsButton", style={"width": 180})
+
+   tierIDsBlankDiv = html.Div(children=[html.H4("blank")], id="tierIDsBlankDiv")
+
+   dropDownMenus = html.Table(id='tierMappingMenus')
+   #      html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
+   #      html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
+   #      html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
+   #      html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu(userTiers))]),
+   #      html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu(userTiers))]),
+   #      html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu(["tabs", "lines"]))])
+   #      ], style={'margin': 100, 'margin-top': 20, 'width': 600}
+   #      )
+
+   div = html.Div(children=[helpTextDisplay, dropDownMenus, tierIDsBlankDiv],
+                  id='tierMapGui-div', className="twelve columns") #, style=style)
 
    return div
+
+#----------------------------------------------------------------------------------------------------
+def createTierMappingMenus(eafFilename):
+
+   dropDownMenus = html.H5("failure in extracting tierIDs from %s" % eafFilename)
+   
+   if(os.path.exists(eafFilename)):
+      tmpDoc = etree.parse(eafFilename)
+      userTiers = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
+      print(userTiers)
+
+      dropDownMenus = html.Table(id='tierMappingMenus', children=[
+         html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
+         html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
+         html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
+         html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu(userTiers))]),
+         html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu(userTiers))]),
+         html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu(["tabs", "lines"]))])
+         ], style={'margin': 100, 'margin-top': 20, 'width': 600}
+         )
+
+   return dropDownMenus
+
+#----------------------------------------------------------------------------------------------------
+#  tmpDoc = etree.parse(filename)
+#  tierIDs = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
+#  print(tierIDs)
+def createPulldownMenu(items):
+   options = []
+   for item in items:
+       newElement={"label": item, "value": item}
+       options.append(newElement)
+
+   menu = dcc.Dropdown(options=options, clearable=False)
+   return(menu)
 
 #----------------------------------------------------------------------------------------------------
 def create_grammaticalTermsDiv():
@@ -383,7 +482,8 @@ def parse_eaf_upload(contents, filename, date):
 app.layout = html.Div(
     children=[
         #create_masterDiv(),
-        create_uploadsDiv(),
+        #create_uploadsDiv(),
+        create_allDivs(),
         html.P(id='projectTitle_hiddenStorage',              children="", style={'display': 'none'}),
         html.P(id='projectDirectory_hiddenStorage',          children="", style={'display': 'none'}),
         html.P(id='eaf_filename_hiddenStorage',              children="", style={'display': 'none'}),
@@ -449,6 +549,7 @@ def on_eafUpload(contents, name, date, projectDirectory):
 def on_soundUpload(contents, name, date, projectDirectory):
     if name is None:
         return("")
+    print("=== on_soundUpload")
     data = contents.encode("utf8").split(b";base64,")[1]
     filename = os.path.join(projectDirectory, name)
     with open(filename, "wb") as fp:
@@ -477,6 +578,7 @@ def on_soundUpload(contents, name, date, projectDirectory):
 def on_tierMapUpload(contents, name, date, projectDirectory):
     if name is None:
         return("")
+    print("=== on_tierMapUpload")
     encodedString = contents.encode("utf8").split(b";base64,")[1]
     decodedString = base64.b64decode(encodedString)
     s = decodedString.decode('utf-8')
@@ -497,6 +599,7 @@ def on_tierMapUpload(contents, name, date, projectDirectory):
 def on_grammaticalTermsUpload(contents, name, date, projectDirectory):
     if name is None:
         return("")
+    print("=== on_grammaticalTermsUpload")
     encodedString = contents.encode("utf8").split(b";base64,")[1]
     decodedString = base64.b64decode(encodedString)
     s = decodedString.decode('utf-8')
@@ -517,9 +620,10 @@ def on_grammaticalTermsUpload(contents, name, date, projectDirectory):
      State('projectTitle_hiddenStorage',   'children'),
      State('projectDirectory_hiddenStorage',   'children'),
     ])
-def extractSoundPhrases(n_clicks, soundFileName, eafFileName, projectTitle, projectDirectory):
+def on_extractSoundPhrases(n_clicks, soundFileName, eafFileName, projectTitle, projectDirectory):
     if n_clicks is None:
         return("")
+    print("=== on_extractSoundPhrases")
     print("n_clicks: %d" % n_clicks)
     if soundFileName is None:
         return("")
@@ -540,6 +644,7 @@ def extractSoundPhrases(n_clicks, soundFileName, eafFileName, projectTitle, proj
     Output('sound_filename_hiddenStorage', 'children'),
     [Input("soundFileUploadTextArea", 'value')])
 def update_output(value):
+    print("=== update_output")
     print("sound_filename_hiddenStorage assignment, callback triggered by soundFileUploadTextArea change: %s" % value)
     soundFileName = value.split(":")[0]
     return(soundFileName)
@@ -549,16 +654,27 @@ def update_output(value):
     Output('eaf_filename_hiddenStorage', 'children'),
     [Input("eafUploadTextArea", 'value')])
 def update_output(value):
-    print("eaf_filename_hiddenStorage assignment, callback triggered by eafUploadTextArea change: %s" % value)
+    print("=== eaf_filename_hiddenStorage assignment, callback triggered by eafUploadTextArea change: %s" % value)
     eafFileName = value.split(":")[0]
     return(eafFileName)
+
+#----------------------------------------------------------------------------------------------------
+@app.callback(
+    Output('tierIDsBlankDiv', 'children'),
+    [Input("eaf_filename_hiddenStorage", 'children')])
+def createTierMappingMenusCallback(eafFilename):
+    if(eafFilename == ""):
+       return("")
+    print("=== extract tier ids from %s" % (eafFilename))
+    #return(html.H4("infinite loop?"))
+    return(createTierMappingMenus(eafFilename))
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(
     Output('audioPhraseDirectory_hiddenStorage', 'children'),
     [Input('associateEAFAndSoundInfoTextArea', 'value')])
 def update_output(value):
-    print("callback triggered by assocateEAFAndSoundTextArea change: %s" % value)
+    print("=== callback triggered by assocateEAFAndSoundTextArea change: %s" % value)
     phraseDirectory = value.split(":")[0]
     return(phraseDirectory)
 
@@ -567,16 +683,28 @@ def update_output(value):
     Output('grammaticalTerms_filename_hiddenStorage', 'children'),
     [Input('grammaticalTermsUploadTextArea', 'value')])
 def update_output(value):
-    print("callback triggered by grammaticalTermsUploadTextArea change: %s" % value)
+    print("=== callback triggered by grammaticalTermsUploadTextArea change: %s" % value)
     grammaticalTermsFile  = value.split(":")[0]
     return(grammaticalTermsFile)
+
+#----------------------------------------------------------------------------------------------------
+# @app.callback(
+#     Output('tierIDsBlankDiv', 'children'),
+#     [Input('extractTierIDsButton', 'n_clicks')],
+#     [State('eaf_filename_hiddenStorage', 'children')])
+# def createTierMappingMenusCallback(n_clicks, eafFilename):
+#     if n_clicks is None:
+#         return("")
+#     print("=== extract tier ids from %s: %d" % (eafFilename, n_clicks))
+#     #return(html.H4("infinite loop?"))
+#     return(createTierMappingMenus(eafFilename))
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(
     Output('tierGuide_filename_hiddenStorage', 'children'),
     [Input('tierMapUploadTextArea', 'value')])
 def update_output(value):
-    print("callback triggered by grammaticalTermsUploadTextArea change: %s" % value)
+    print("=== callback triggered by grammaticalTermsUploadTextArea change: %s" % value)
     tierGuideFile  = value.split(":")[0]
     return(tierGuideFile)
 
@@ -589,11 +717,11 @@ def update_output(value):
      State('projectDirectory_hiddenStorage', 'children'),
      State('grammaticalTerms_filename_hiddenStorage', 'children'),
      State('tierGuide_filename_hiddenStorage', 'children')])
-def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
-                  grammaticalTermsFile, tierGuideFile):
+def createWebPageCallback(n_clicks, soundFileName, eafFileName, projectDirectory,
+                          grammaticalTermsFile, tierGuideFile):
     if n_clicks is None:
         return("")
-    print("--- create web page")
+    print("=== create web page callback")
     print("        eaf: %s", eafFileName)
     print(" phrases in: %s", projectDirectory)
     if(grammaticalTermsFile == ""):
@@ -617,7 +745,7 @@ def update_output(n_clicks, soundFileName, eafFileName, projectDirectory,
      Input('setTitleTextInput', 'value')]
     )
 def setTitle(n_clicks, newTitle):
-    print("title callback")
+    print("=== title callback")
     if n_clicks is None:
         print("n_clicks is None")
         return("")
@@ -636,11 +764,11 @@ def setTitle(n_clicks, newTitle):
 def update_output(projectTitle):
     if(len(projectTitle) == 0):
         return('')
-    print("--- project title has been set, now create project directory: '%s'" % projectTitle)
+    print("=== project title has been set, now create project directory: '%s'" % projectTitle)
     projectDirectory = os.path.join(PROJECTS_DIRECTORY, projectTitle)
     print("   creating projectDirectory if needed: %s" % projectDirectory)
     if(not os.path.exists(projectDirectory)):
-       os.mkdir(projectDirectory)
+        os.mkdir(projectDirectory)
     return(projectDirectory)
 
 @app.callback(
@@ -650,6 +778,7 @@ def update_output(projectTitle):
 def displayText(n_clicks, projectDirectory):
    if n_clicks is None:
       return("")
+   print("=== displayText")
    pathToHTML = os.path.join(projectDirectory, "text.html")
    return(pathToHTML)
 

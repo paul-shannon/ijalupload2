@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
+
 from textwrap import dedent
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -34,6 +37,11 @@ app.layout = html.Div(children=[
     html.H4("Assign your tiers to the standard slexil tiers",
             style={'margin-left': 100}),
 
+    html.Details([
+       html.Summary('Label of the item'),
+       html.Div('Contents')
+       ], style={'margin': 20}),
+
     html.Div(children=helpText,
         style={'margin': 100,
                'margin-top': 10,
@@ -43,7 +51,7 @@ app.layout = html.Div(children=[
                'padding': 20,
                'width': "40%"}),
 
-    html.Table([
+    html.Table(id='mainDiv', children=[
         html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
         html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
         html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
@@ -62,6 +70,9 @@ def createPulldownMenu(choicesFoo):
 
    menu = dcc.Dropdown(options=options, clearable=False)
    return(menu)
+
+#------------------------------------------------------------------------------------------------------------------------
+
 
 #if __name__ == '__main__':
 # app.run_server(debug=True)
