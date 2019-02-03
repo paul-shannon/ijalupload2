@@ -13,6 +13,7 @@ import webbrowser
 from flask import Flask
 import flask
 from textwrap import dedent
+from zipfile import *
 #----------------------------------------------------------------------------------------------------
 import sys
 sys.path.append("../ijal_interlinear")
@@ -257,7 +258,7 @@ def create_webPageCreationTab():
 
    createButton =  html.Button('Create Web Page', id='createWebPageButton', style={"margin": "20px"})
    displayButton =  html.Button('Display Web Page', id='displayIJALTextButton', style={"margin": "20px"})
-   downloadZipButton =  html.Button('Download Page', id='downloadIJALTextButton', style={"margin": "20px"})
+   downloadWebpageButton =  html.Button('Download Page', id='downloadWebpageButton', style={"margin": "20px"})
 
    textArea = dcc.Textarea(id="createWebPageInfoTextArea",
                            placeholder='progress info will appear here',
@@ -266,8 +267,13 @@ def create_webPageCreationTab():
 
    webPageIframe = html.Iframe(id="storyIFrame", src="<h3>the story goes here</h3>", width=1200, height=800)
 
-   children = [html.Br(), createButton, displayButton, downloadZipButton, html.Br(), textArea,
-               html.Br(), webPageIframe]
+   saveWebpageProgressTextArea = dcc.Textarea(id="saveWebpageProgressTextArea",
+                                              placeholder='progress info will appear here',
+                                              value="",
+                                              style={'width': 600, 'height': 30})
+
+   children = [html.Br(), createButton, displayButton, downloadWebpageButton, html.Br(), textArea,
+               html.Br(), webPageIframe, saveWebpageProgressTextArea]
 
    div = html.Div(children=children, id='createWebPageDiv', style={'display': 'block'})
 
@@ -340,7 +346,7 @@ def create_allDivs():
             'padding': '.5em .5em 0'}
 
    children = [
-       html.H4("IJAL Upload", style={'text-align': 'center'}),
+       html.H4("IJAL Upload", style={'text-align': 'center'}, id='pageTitleH4'),
        html.Details([html.Summary('Set Title'), html.Div(create_setTitleTab())], style=style),
        html.Details([html.Summary('EAF'), html.Div(create_eafUploaderTab())], style=style),
        html.Details([html.Summary('Sound'), html.Div(create_soundFileUploaderTab())], style=style),
@@ -422,7 +428,7 @@ into a single eaf XML line (separated by tabs) or spread out over multiple xml e
 def createTierMappingMenus(eafFilename):
 
    dropDownMenus = html.H5("failure in extracting tierIDs from %s" % eafFilename)
-   
+
    if(os.path.exists(eafFilename)):
       tmpDoc = etree.parse(eafFilename)
       userTiers = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
@@ -588,7 +594,7 @@ def on_tierMapUpload(contents, name, date, projectDirectory):
        fp.write(s)
        fp.close()
 
-    return("%s: %s" % (filename, s))
+    return("%s:\n %s" % (filename, s))
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(Output('grammaticalTermsUploadTextArea', 'value'),
@@ -772,6 +778,19 @@ def update_output(projectTitle):
     return(projectDirectory)
 
 @app.callback(
+    Output('pageTitleH4', 'children'),
+    [Input('projectDirectory_hiddenStorage', 'children')]
+    )
+def update_pageTitle(projectDirectory):
+    if(len(projectDirectory) == 0):
+        return('IJAL Upload')
+    print("=== projectDirectory_hiddenStorage has been set, now change project pageTitle: '%s'" % projectDirectory)
+    #pdb.set_trace()
+    newProjectTitle = projectDirectory.replace(PROJECTS_DIRECTORY, "")
+    newProjectTitle = newProjectTitle.replace("/", "")
+    return("IJAL Upload: %s" % newProjectTitle)
+
+@app.callback(
     Output('storyIFrame', 'src'),
     [Input('displayIJALTextButton', 'n_clicks'),
      Input('projectDirectory_hiddenStorage', 'children')])
@@ -781,6 +800,16 @@ def displayText(n_clicks, projectDirectory):
    print("=== displayText")
    pathToHTML = os.path.join(projectDirectory, "text.html")
    return(pathToHTML)
+
+@app.callback(
+    Output('saveWebpageProgressTextArea', 'value'),
+    [Input('downloadWebpageButton', 'n_clicks'),
+     Input('projectTitle_hiddenStorage', 'children')])
+def saveWebpage(n_clicks, projectTitle):
+   if n_clicks is None:
+      return("")
+   createZipFile(projectTitle)
+   return("wrote web page as zip file")
 
 
 #----------------------------------------------------------------------------------------------------
@@ -821,9 +850,28 @@ def createWebPage(eafFileName, projectDirectory, grammaticalTermsFileName, tierG
     return(text.toHTML())
 
 #----------------------------------------------------------------------------------------------------
+def createZipFile(projectName):
+
+   currentDirectoryOnEntry = os.getcwd()
+   projectDir = os.path.join(PROJECTS_DIRECTORY, projectName)
+   os.chdir(projectDir)
+
+   audioDir = "audio"
+   filesToSave = [os.path.join("audio", f) for f in os.listdir(audioDir) if f.endswith('.wav')]
+   filesToSave.insert(0, "text.html")
+
+   zipFilename = "webpage.zip"
+   zipHandle = ZipFile(zipFilename, 'w')
+
+   for file in filesToSave:
+      zipHandle.write(file)
+
+   zipHandle.close()
+
+   os.chdir(currentDirectoryOnEntry)
+
+#----------------------------------------------------------------------------------------------------
 server = app.server
 
 if __name__ == "__main__":
     app.run_server(host='0.0.0.0', port=60041)
-
-
