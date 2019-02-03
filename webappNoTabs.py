@@ -31,6 +31,7 @@ import dash_html_components as html
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, static_folder='PROJECTS')
+app.config['suppress_callback_exceptions'] = True
 app.title = "IJAL Text Upload"
 
 app.scripts.config.serve_locally = True
@@ -350,8 +351,8 @@ def create_allDivs():
        html.Details([html.Summary('Set Title'), html.Div(create_setTitleTab())], style=style),
        html.Details([html.Summary('EAF'), html.Div(create_eafUploaderTab())], style=style),
        html.Details([html.Summary('Sound'), html.Div(create_soundFileUploaderTab())], style=style),
-       html.Details([html.Summary('Tier Map: upload from File'), html.Div(create_tierMapUploaderTab())], style=style),
-       html.Details([html.Summary('Tier Map: specify interactively'), html.Div(create_tierMapGui())], style=style),
+       html.Details([html.Summary('Tier Guide, option 1: upload from file'), html.Div(create_tierMapUploaderTab())], style=style),
+       html.Details([html.Summary('Tier Guide, option 2: specify interactively'), html.Div(create_tierMapGui())], style=style),
        html.Details([html.Summary('GrammaticalTerms'), html.Div(create_grammaticalTermsUploaderTab())], style=style),
        html.Details([html.Summary('EAF+Sound'), html.Div(create_associateEAFandSoundTab())], style=style),
        html.Details([html.Summary('Create Web Page'), html.Div(create_webPageCreationTab())], style=style)]
@@ -410,6 +411,13 @@ into a single eaf XML line (separated by tabs) or spread out over multiple xml e
    tierIDsBlankDiv = html.Div(children=[html.H4("blank")], id="tierIDsBlankDiv")
 
    dropDownMenus = html.Table(id='tierMappingMenus')
+   submitInteractiveTierMapButton =  html.Button("Submit", style=buttonStyle, id="submitInteractiveTierMapButton")
+
+
+      # just to keep dash happy.  i hope this is replaced by dynamically created pulldown menus
+   #menuPlaceHolderElement =  html.P(id='tierGuideMenu', children="", style={'display': 'none'}),
+
+
    #      html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
    #      html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
    #      html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
@@ -419,7 +427,18 @@ into a single eaf XML line (separated by tabs) or spread out over multiple xml e
    #      ], style={'margin': 100, 'margin-top': 20, 'width': 600}
    #      )
 
-   div = html.Div(children=[helpTextDisplay, dropDownMenus, tierIDsBlankDiv],
+   textArea = dcc.Textarea(id='writeTierGuideFileTextArea',
+                           placeholder='tier guide write status goes here',
+                           value="",
+                           style={'width': 600, 'height': 50})
+
+   div = html.Div(children=[helpTextDisplay,
+                            dropDownMenus,
+                            tierIDsBlankDiv,
+                            submitInteractiveTierMapButton,
+                            #menuPlaceHolderElement,
+                            html.Br(),
+                            textArea],
                   id='tierMapGui-div', className="twelve columns") #, style=style)
 
    return div
@@ -435,7 +454,7 @@ def createTierMappingMenus(eafFilename):
       print(userTiers)
 
       dropDownMenus = html.Table(id='tierMappingMenus', children=[
-         html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
+         html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tier names (from EAF file)", style={'width': "60%"})]),
          html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
          html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
          html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu(userTiers))]),
@@ -456,7 +475,7 @@ def createPulldownMenu(items):
        newElement={"label": item, "value": item}
        options.append(newElement)
 
-   menu = dcc.Dropdown(options=options, clearable=False)
+   menu = dcc.Dropdown(options=options, clearable=False, id="tierGuideMenu")
    return(menu)
 
 #----------------------------------------------------------------------------------------------------
@@ -789,6 +808,16 @@ def update_pageTitle(projectDirectory):
     newProjectTitle = projectDirectory.replace(PROJECTS_DIRECTORY, "")
     newProjectTitle = newProjectTitle.replace("/", "")
     return("IJAL Upload: %s" % newProjectTitle)
+
+# @app.callback(
+# Output('writeTierGuideFileTextArea', 'value'),
+#    [Input('submitInteractiveTierMapButton', 'n_clicks'),
+#     Input('tierGuideMenu', 'children')])
+# def saveTierGuideToFile(n_clicks, menuValue):
+#    if n_clicks is None:
+#       return("")
+#    print("need to saveTierGuidToFile");
+#    return("pretese: saved choices")
 
 @app.callback(
     Output('storyIFrame', 'src'),
