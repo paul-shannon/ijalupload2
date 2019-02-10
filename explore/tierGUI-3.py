@@ -4,7 +4,7 @@ import pdb
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import xmlschema
 from xml.etree import ElementTree as etree
 
@@ -12,6 +12,8 @@ from textwrap import dedent
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.config['suppress_callback_exceptions'] = True
+
 buttonStyle = {'width': '140px',
                'height': '60px',
                'color': 'gray',
@@ -64,10 +66,16 @@ def createTierMappingMenus(eafFilename):
          html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu("morpheme", tierChoices))]),
          html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu("morphemeGloss", tierChoices))]),
          html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu("morphemePacking", ["tabs", "lines"]))])
-         ], style={'margin': 100, 'margin-top': 20, 'width': 600}
+         ], style={'margin': 100, 'margin-top': 10, 'margin-bottom': 0, 'width': 600}
          )
 
-   return dropDownMenus
+   saveTierMappingChoicesButton = html.Button('Save Choices', id='saveTierMappingSelectionsButton',
+                                       style={"margin-left": 100, "margin-top": 10})
+
+   tierMappingChoicesResultDisplay = html.Span(id="tierMappingChoicesResultDisplay", children="tmcrd")
+   enclosingDiv = html.Div(children=[dropDownMenus, saveTierMappingChoicesButton, tierMappingChoicesResultDisplay])
+   #return dropDownMenus
+   return(enclosingDiv)
 
 #----------------------------------------------------------------------------------------------------
 def create_tierMapGui():
@@ -114,10 +122,15 @@ def create_allDivs():
             'border-radius': 4,
             'padding': '.5em .5em 0'}
 
-   setFileButton =  html.Button('Set File', id='setFileButton', style={"margin": "20px"})
+   setFileButton =  html.Button('Set File', id='setFileButton', style={"margin": "5px"})
    children = [
        html.H4("IJAL Upload", style={'text-align': 'center'}, id='pageTitleH4'),
-       html.P(id='eafFilename_hiddenStorage',   children="", style={'display': 'none'}),
+       html.P(id='eafFilename_hiddenStorage',       children="", style={'display': 'none'}),
+       html.P(id='speechTier_hiddenStorage',        children="", style={'display': 'none'}),
+       html.P(id='translationTier_hiddenStorage',   children="", style={'display': 'none'}),
+       html.P(id='morphemeTier_hiddenStorage',      children="", style={'display': 'none'}),
+       html.P(id='morphemeGlossTier_hiddenStorage', children="", style={'display': 'none'}),
+       html.P(id='morphemePacking_hiddenStorage',   children="", style={'display': 'none'}),
        setFileButton,
        html.Details([html.Summary('Tier Guide, option 2: specify interactively'),
                      html.Div(create_tierMapGui())], style=style)
@@ -151,6 +164,61 @@ def populateTierGuidePulldowns(filename):
     # pdb.set_trace()
     return createTierMappingMenus("../inferno-threeLines/inferno-threeLines.eaf")
     #return html.Div(html.H3("hobo")) #createTierMappingMenus("../inferno-threeLines/inferno-threeLines.eaf")
+
+
+@app.callback(
+    Output('speechTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-speech', 'value')])
+def updateSpeechTier(value):
+    print("speech tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('translationTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-translation', 'value')])
+def updateTranslationTier(value):
+    print("translation tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemeTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morpheme', 'value')])
+def updateMorphemeTier(value):
+    print("morpheme tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemeGlossTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morphemeGloss', 'value')])
+def updateMorphemeGlossTier(value):
+    print("morphemeGloss tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemePacking_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morphemePacking', 'value')])
+def updateMorphemePackingUserChoice(value):
+    print("morphemePacking: %s" % value)
+    return value
+
+@app.callback(
+    Output('tierMappingChoicesResultDisplay', 'children'),
+    [Input('saveTierMappingSelectionsButton', 'n_clicks')],
+    [State('speechTier_hiddenStorage',        'children'),
+     State('translationTier_hiddenStorage',   'children'),
+     State('morphemeTier_hiddenStorage',      'children'),
+     State('morphemeGlossTier_hiddenStorage', 'children'),
+     State('morphemePacking_hiddenStorage',   'children')])
+def saveTierMappingSelection(n_clicks, speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking):
+    if n_clicks is None:
+        return("")
+    print("saveTierMappingSelectionsButton: %d" % n_clicks)
+    print("speechTier: %s" % speechTier)
+    print("translationTier: %s" % translationTier)
+    print("morphemeTier: %s" % morphemeTier)
+    print("morphemeGlossTier: %s" % morphemeGlossTier)
+    print("morphemePacking: %s" % morphemePacking)
+    return("saved!")
 
 #----------------------------------------------------------------------------------------------------
 # @app.callback(
