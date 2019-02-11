@@ -87,7 +87,6 @@ def create_setTitleTab():
                          style={'width': '512px', 'fontSize': 20})
 
    setTitleButton = html.Button(id='setTitleButton', type='submit', children='Submit')
-#tierIDsBlankDiv = html.Div(children=[html.H4("blank")], id="tierIDsBlankDiv")
 
    children = [html.Br(),
                setTitleInput,

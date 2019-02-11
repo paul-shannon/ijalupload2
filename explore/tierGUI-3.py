@@ -7,6 +7,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import xmlschema
 from xml.etree import ElementTree as etree
+import yaml
 
 from textwrap import dedent
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -72,7 +73,8 @@ def createTierMappingMenus(eafFilename):
    saveTierMappingChoicesButton = html.Button('Save Choices', id='saveTierMappingSelectionsButton',
                                        style={"margin-left": 100, "margin-top": 10})
 
-   tierMappingChoicesResultDisplay = html.Span(id="tierMappingChoicesResultDisplay", children="tmcrd")
+   tierMappingChoicesResultDisplay = html.Span(id="tierMappingChoicesResultDisplay", children="tmcrd",
+                                               style={"border": 1, "margin-left": 10})
    enclosingDiv = html.Div(children=[dropDownMenus, saveTierMappingChoicesButton, tierMappingChoicesResultDisplay])
    #return dropDownMenus
    return(enclosingDiv)
@@ -122,7 +124,9 @@ def create_allDivs():
             'border-radius': 4,
             'padding': '.5em .5em 0'}
 
+   downloadDemoFilesButton = dcc.Link(html.Button('Demo Files'), href="/PROJECTS/inferno.zip")
    setFileButton =  html.Button('Set File', id='setFileButton', style={"margin": "5px"})
+
    children = [
        html.H4("IJAL Upload", style={'text-align': 'center'}, id='pageTitleH4'),
        html.P(id='eafFilename_hiddenStorage',       children="", style={'display': 'none'}),
@@ -131,6 +135,7 @@ def create_allDivs():
        html.P(id='morphemeTier_hiddenStorage',      children="", style={'display': 'none'}),
        html.P(id='morphemeGlossTier_hiddenStorage', children="", style={'display': 'none'}),
        html.P(id='morphemePacking_hiddenStorage',   children="", style={'display': 'none'}),
+       downloadDemoFilesButton,
        setFileButton,
        html.Details([html.Summary('Tier Guide, option 2: specify interactively'),
                      html.Div(create_tierMapGui())], style=style)
@@ -213,22 +218,31 @@ def saveTierMappingSelection(n_clicks, speechTier, translationTier, morphemeTier
     if n_clicks is None:
         return("")
     print("saveTierMappingSelectionsButton: %d" % n_clicks)
+    if(any([len(x) == 0 for x in [speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking]])):
+       print("not all tiers mapped")
+       return("Some choices not yet made.")
+
+    print("time to write tierGuide.yaml")
     print("speechTier: %s" % speechTier)
     print("translationTier: %s" % translationTier)
     print("morphemeTier: %s" % morphemeTier)
     print("morphemeGlossTier: %s" % morphemeGlossTier)
     print("morphemePacking: %s" % morphemePacking)
-    return("saved!")
+    saveTierGuide(speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking)
+    return("Saved your selection to 'tierGuide.yaml'")
 
 #----------------------------------------------------------------------------------------------------
-# @app.callback(
-#      Output('tierMappingMenus', 'children'),
-#      [Input('setFileButton', 'n_clicks')])
-# def populateTierGuidePulldowns(n_clicks):
-#      if n_clicks is None:
-#          return ""
-#      print("=== populateTierGuidePulldowns: %d" % n_clicks)
-#      return createTierMappingMenus("../inferno-threeLines/inferno-threeLines.eaf")
+def saveTierGuide(speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking):
 
-#------------------------------------------------------------------------------------------------------------------------
+    dict = {"speech": speechTier,
+            "translation": translationTier,
+            "morpheme": morphemeTier,
+            "morphemeGloss": morphemeGlossTier,
+            "morphemePacking": morphemePacking}
 
+    with open('tierGuide.yaml', 'w') as outfile:
+        yaml.dump(dict, outfile, default_flow_style=False)
+
+    print("saved tierMap to tierGuide.yaml")
+
+#----------------------------------------------------------------------------------------------------

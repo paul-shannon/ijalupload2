@@ -39,7 +39,6 @@ def createPulldownMenu(menuName, tierChoices):
        options.append(newElement)
 
    idName = "tierGuideMenu-%s" % menuName
-   #emptyOption = {"label": "pending upload of EAF file", "value": "pending"}
    menu = dcc.Dropdown(options=options, clearable=False, id=idName)
    return(menu)
 
@@ -125,7 +124,17 @@ def create_allDivs():
    return div
 
 #----------------------------------------------------------------------------------------------------
+app.layout = html.Div(children=[create_allDivs()])
+#----------------------------------------------------------------------------------------------------
+@app.callback(
+    Output('tierGuideMenu-speech', 'options'),
+    [Input('setFileButton', 'n_clicks')])
+def populateTierGuidePulldowns(n_clicks):
+    if n_clicks is None:
+        s = "pending selection of EAF file"
+        return [{'label': s, 'value': "pending"}]
+    print("=== populateTierGuidePulldowns")
+    return [{'label': "foobar", 'value': "foobar"}]
 
-app.layout = html.Div(children=[
-    create_allDivs()
-])
+#------------------------------------------------------------------------------------------------------------------------
+
