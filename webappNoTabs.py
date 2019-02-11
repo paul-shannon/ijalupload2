@@ -159,40 +159,6 @@ def create_soundFileUploaderTab():
    return div
 
 #----------------------------------------------------------------------------------------------------
-def create_tierMapFileUploader():
-
-    uploader = dcc.Upload(id='upload-tierMap-file',
-                          children=html.Div([html.A('Select File', style=buttonStyle)]),
-                          multiple=False,
-                          style={'display': 'inline-block'})
-
-    return uploader
-
-#----------------------------------------------------------------------------------------------------
-def create_tierMapUploaderTab():
-
-   style = {'border': '5px solid purple',
-            'border-radius': '5px',
-            'padding': '10px'}
-
-   textArea = dcc.Textarea(id="tierMapUploadTextArea",
-                           placeholder='tierGuide.yaml will be displayed here',
-                           value="",
-                           style={'width': 600, 'height': 300})
-
-   children = [html.Br(),
-               html.Div([create_tierMapFileUploader()],
-                        style={'display': 'inline-block'}),
-               html.Br(),
-               html.Br(),
-               textArea
-               ]
-
-   div = html.Div(children=children, id='tierGuideFileUploaderDiv')
-
-   return div
-
-#----------------------------------------------------------------------------------------------------
 def create_grammaticalTermsUploaderTab():
 
    style = {'border': '5px solid purple',
@@ -260,20 +226,17 @@ def create_webPageCreationTab():
    displayButton =  html.Button('Display Web Page', id='displayIJALTextButton', style={"margin": "20px"})
    downloadWebpageButton =  html.Button('Download Page', id='downloadWebpageButton', style={"margin": "20px"})
 
-   textArea = dcc.Textarea(id="createWebPageInfoTextArea",
-                           placeholder='progress info will appear here',
-                           value="",
-                           style={'width': 600, 'height': 30})
+   createWebpageStatus = html.Span(id="createWebPageStatus", children="cwpita", style={"margin-left": 10})
 
    webPageIframe = html.Iframe(id="storyIFrame", src="<h3>the story goes here</h3>", width=1200, height=800)
 
-   saveWebpageProgressTextArea = dcc.Textarea(id="saveWebpageProgressTextArea",
-                                              placeholder='progress info will appear here',
-                                              value="",
-                                              style={'width': 600, 'height': 30})
+   saveWebpageStatus = html.Span(id="saveWebpageProgressTextArea", children="swppta")
+                                              #placeholder='progress info will appear here',
+                                              #alue="",
+                                              #style={'width': 600, 'height': 30})
 
-   children = [html.Br(), createButton, displayButton, downloadWebpageButton, html.Br(), textArea,
-               html.Br(), webPageIframe, saveWebpageProgressTextArea]
+   children = [html.Br(), createButton, displayButton, downloadWebpageButton, html.Br(), createWebpageStatus,
+               html.Br(), saveWebpageStatus, webPageIframe]
 
    div = html.Div(children=children, id='createWebPageDiv', style={'display': 'block'})
 
@@ -301,34 +264,38 @@ def create_masterDiv():
    return div
 
 #----------------------------------------------------------------------------------------------------
-def create_uploadsDiv():
+def create_tierMapGui():
 
    style = {'border': '1px solid purple',
             'border-radius': '5px',
-            'padding': '1px'}
+            'padding': '10px'}
 
-   tabsStyle = {'width': '100%',
-                'fontFamily': 'Sans-Serif',
-                'font-size': 12,
-                'margin-left': 'auto',
-                'margin-right': 'auto'
-                }
+   helpText = dcc.Markdown(dedent('''There are four standard interlinear tiers.'''))
 
-   tabs = dcc.Tabs(id="tabs-example", value='tab-1-example',
-                   children=[dcc.Tab(label='Set Title', children=create_setTitleTab()),
-                             dcc.Tab(label='EAF', children=create_eafUploaderTab()),
-                             dcc.Tab(label='Sound', children=create_soundFileUploaderTab()),
-                             dcc.Tab(label='Tier Map', children=create_tierMapUploaderTab()),
-                             dcc.Tab(label='Tier GUI', children=create_tierGuiTab()),
-                             dcc.Tab(label='GrammaticalTerms', children=create_grammaticalTermsUploaderTab()),
-                             dcc.Tab(label='EAF+Sound', children=create_associateEAFandSoundTab()),
-                             dcc.Tab(label='Create Web Page', children=create_webPageCreationTab()),
+   helpTextDisplay = html.Div(children=helpText,
+                        style={'margin': 100,
+                               'margin-top': 10,
+                               'margin-bottom': 10,
+                               'border': '1px solid gray',
+                               'border-radius': 5,
+                               'padding': 20,
+                               'width': "80%"})
 
+   dropDownMenus = html.Div(id="tierMappingMenus")
 
-                   ], style=tabsStyle)
+   submitInteractiveTierMapButton =  html.Button("Submit", style=buttonStyle, id="submitInteractiveTierMapButton")
 
-   children = tabs;
-   div = html.Div(children=children, id='uploads-div', className="twelve columns") # , style=style)
+   textArea = dcc.Textarea(id='writeTierGuideFileTextArea',
+                           placeholder='tier guide write status goes here',
+                           value="",
+                           style={'width': 600, 'height': 50})
+
+   div = html.Div(children=[helpTextDisplay,
+                            dropDownMenus,
+                            submitInteractiveTierMapButton,
+                            html.Br(),
+                            textArea],
+                  id='tierMapGui-div', className="twelve columns") #, style=style)
 
    return div
 
@@ -350,8 +317,7 @@ def create_allDivs():
        html.Details([html.Summary('Set Title'), html.Div(create_setTitleTab())], style=style),
        html.Details([html.Summary('EAF'), html.Div(create_eafUploaderTab())], style=style),
        html.Details([html.Summary('Sound'), html.Div(create_soundFileUploaderTab())], style=style),
-       html.Details([html.Summary('Tier Guide, option 1: upload from file'), html.Div(create_tierMapUploaderTab())], style=style),
-       html.Details([html.Summary('Tier Guide, option 2: specify interactively'), html.Div(create_tierMapGui())], style=style),
+       html.Details([html.Summary('Tier Guide'), html.Div(create_tierMapGui())], style=style),
        html.Details([html.Summary('GrammaticalTerms'), html.Div(create_grammaticalTermsUploaderTab())], style=style),
        html.Details([html.Summary('EAF+Sound'), html.Div(create_associateEAFandSoundTab())], style=style),
        html.Details([html.Summary('Create Web Page'), html.Div(create_webPageCreationTab())], style=style)]
@@ -376,106 +342,52 @@ def create_tierMapDiv():
    return div
 
 #----------------------------------------------------------------------------------------------------
-def create_tierMapGui():
+#  tmpDoc = etree.parse(filename)
+#  tierIDs = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
+#  print(tierIDs)
+def createPulldownMenu(menuName, tierChoices):
 
-   style = {'border': '1px solid purple',
-            'border-radius': '5px',
-            'padding': '10px'}
+   options = []
+   for item in tierChoices:
+       newElement={"label": item, "value": item}
+       options.append(newElement)
 
-   helpText = dcc.Markdown(dedent('''
-There are four standard interlinear tiers.  We ask that you associate your tier names with them, using the
-dropdown menus below.
-
-* speech
-* translation (into the linguist's language)
-* morpheme
-* morphemeGloss
-
-In addition, we ask you to specify whether morpheme's and their glosses are packed
-into a single eaf XML line (separated by tabs) or spread out over multiple xml elements.
-'''))
-
-
-   helpTextDisplay = html.Div(children=helpText,
-                        style={'margin': 100,
-                               'margin-top': 10,
-                               'margin-bottom': 10,
-                               'border': '1px solid gray',
-                               'border-radius': 5,
-                               'padding': 20,
-                               'width': "80%"})
-
-   #button = html.Button("Extract tier Ids", id="extractTierIDsButton", style={"width": 180})
-
-   tierIDsBlankDiv = html.Div(children=[html.H4("blank")], id="tierIDsBlankDiv")
-
-   dropDownMenus = html.Table(id='tierMappingMenus')
-   submitInteractiveTierMapButton =  html.Button("Submit", style=buttonStyle, id="submitInteractiveTierMapButton")
-
-
-      # just to keep dash happy.  i hope this is replaced by dynamically created pulldown menus
-   #menuPlaceHolderElement =  html.P(id='tierGuideMenu', children="", style={'display': 'none'}),
-
-
-   #      html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tiers (from EAF file)", style={'width': "60%"})]),
-   #      html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
-   #      html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
-   #      html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu(userTiers))]),
-   #      html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu(userTiers))]),
-   #      html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu(["tabs", "lines"]))])
-   #      ], style={'margin': 100, 'margin-top': 20, 'width': 600}
-   #      )
-
-   textArea = dcc.Textarea(id='writeTierGuideFileTextArea',
-                           placeholder='tier guide write status goes here',
-                           value="",
-                           style={'width': 600, 'height': 50})
-
-   div = html.Div(children=[helpTextDisplay,
-                            dropDownMenus,
-                            tierIDsBlankDiv,
-                            submitInteractiveTierMapButton,
-                            #menuPlaceHolderElement,
-                            html.Br(),
-                            textArea],
-                  id='tierMapGui-div', className="twelve columns") #, style=style)
-
-   return div
+   idName = "tierGuideMenu-%s" % menuName
+   menu = dcc.Dropdown(options=options, clearable=False, id=idName)
+   return(menu)
 
 #----------------------------------------------------------------------------------------------------
 def createTierMappingMenus(eafFilename):
 
+   print("--- createTierMappingMenus: %s [exists: %s]" % (eafFilename, os.path.exists(eafFilename)))
    dropDownMenus = html.H5("failure in extracting tierIDs from %s" % eafFilename)
 
    if(os.path.exists(eafFilename)):
       tmpDoc = etree.parse(eafFilename)
-      userTiers = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
-      print(userTiers)
+      userProvidedTierNamesToAssignToStandardTiers = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
+      print(userProvidedTierNamesToAssignToStandardTiers)
+
+      tierChoices = userProvidedTierNamesToAssignToStandardTiers
+      #tierChoices = ["pending EAF file selection"]
 
       dropDownMenus = html.Table(id='tierMappingMenus', children=[
          html.Tr([html.Th("Standard interlinear tiers"), html.Th("User tier names (from EAF file)", style={'width': "60%"})]),
-         html.Tr([html.Td("speech"), html.Td(createPulldownMenu(userTiers))]),
-         html.Tr([html.Td("translation"), html.Td(createPulldownMenu(userTiers))]),
-         html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu(userTiers))]),
-         html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu(userTiers))]),
-         html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu(["tabs", "lines"]))])
-         ], style={'margin': 100, 'margin-top': 20, 'width': 600}
+         html.Tr([html.Td("speech"), html.Td(createPulldownMenu("speech", tierChoices))]),
+         html.Tr([html.Td("translation"), html.Td(createPulldownMenu("translation", tierChoices))]),
+         html.Tr([html.Td("morpheme"), html.Td(createPulldownMenu("morpheme", tierChoices))]),
+         html.Tr([html.Td("morphemeGloss"), html.Td(createPulldownMenu("morphemeGloss", tierChoices))]),
+         html.Tr([html.Td("morphemePacking"), html.Td(createPulldownMenu("morphemePacking", ["tabs", "lines"]))])
+         ], style={'margin': 100, 'margin-top': 10, 'margin-bottom': 0, 'width': 600}
          )
 
-   return dropDownMenus
+   saveTierMappingChoicesButton = html.Button('Save Choices', id='saveTierMappingSelectionsButton',
+                                       style={"margin-left": 100, "margin-top": 10, "margin-bottom": 20})
 
-#----------------------------------------------------------------------------------------------------
-#  tmpDoc = etree.parse(filename)
-#  tierIDs = [tier.attrib["TIER_ID"] for tier in tmpDoc.findall("TIER")]
-#  print(tierIDs)
-def createPulldownMenu(items):
-   options = []
-   for item in items:
-       newElement={"label": item, "value": item}
-       options.append(newElement)
-
-   menu = dcc.Dropdown(options=options, clearable=False, id="tierGuideMenu")
-   return(menu)
+   tierMappingChoicesResultDisplay = html.Span(id="tierMappingChoicesResultDisplay", children="tmcrd",
+                                               style={"border": 1, "margin-left": 10})
+   enclosingDiv = html.Div(children=[dropDownMenus, saveTierMappingChoicesButton, tierMappingChoicesResultDisplay])
+   #return dropDownMenus
+   return(enclosingDiv)
 
 #----------------------------------------------------------------------------------------------------
 def create_grammaticalTermsDiv():
@@ -505,8 +417,6 @@ def parse_eaf_upload(contents, filename, date):
 #----------------------------------------------------------------------------------------------------
 app.layout = html.Div(
     children=[
-        #create_masterDiv(),
-        #create_uploadsDiv(),
         create_allDivs(),
         html.P(id='projectTitle_hiddenStorage',              children="", style={'display': 'none'}),
         html.P(id='projectDirectory_hiddenStorage',          children="", style={'display': 'none'}),
@@ -515,6 +425,11 @@ app.layout = html.Div(
         html.P(id='audioPhraseDirectory_hiddenStorage',      children="", style={'display': 'none'}),
         html.P(id='grammaticalTerms_filename_hiddenStorage', children="", style={'display': 'none'}),
         html.P(id='tierGuide_filename_hiddenStorage',        children="", style={'display': 'none'}),
+        html.P(id='speechTier_hiddenStorage',        children="", style={'display': 'none'}),
+        html.P(id='translationTier_hiddenStorage',   children="", style={'display': 'none'}),
+        html.P(id='morphemeTier_hiddenStorage',      children="", style={'display': 'none'}),
+        html.P(id='morphemeGlossTier_hiddenStorage', children="", style={'display': 'none'}),
+        html.P(id='morphemePacking_hiddenStorage',   children="", style={'display': 'none'}),
         ],
     className="row",
     id='outerDiv',
@@ -525,18 +440,6 @@ app.layout = html.Div(
            'height':  '300px',
         })
 
-#----------------------------------------------------------------------------------------------------
-# @app.callback(Output('eafStatusLabel', 'children'),
-#              [Input('upload-eaf-file', 'contents')],
-#              [State('upload-eaf-file', 'filename'),
-#               State('upload-eaf-file', 'last_modified')])
-#def updateEafLabel(contents, name, date):
-#   if name is None:
-#       return "EAF: "
-#   if name is not None:
-#       print("on_eafUpload, name: %s" % name)
-#       return "EAF: %s" % name
-#
 #----------------------------------------------------------------------------------------------------
 @app.callback(Output('eafUploadTextArea', 'value'),
               [Input('upload-eaf-file', 'contents')],
@@ -667,9 +570,8 @@ def on_extractSoundPhrases(n_clicks, soundFileName, eafFileName, projectTitle, p
 @app.callback(
     Output('sound_filename_hiddenStorage', 'children'),
     [Input("soundFileUploadTextArea", 'value')])
-def update_output(value):
-    print("=== update_output")
-    print("sound_filename_hiddenStorage assignment, callback triggered by soundFileUploadTextArea change: %s" % value)
+def storeSoundFilename(value):
+    print("storeSoundFilename, by soundFileUploadTextArea change: %s" % value)
     soundFileName = value.split(":")[0]
     return(soundFileName)
 
@@ -677,16 +579,17 @@ def update_output(value):
 @app.callback(
     Output('eaf_filename_hiddenStorage', 'children'),
     [Input("eafUploadTextArea", 'value')])
-def update_output(value):
-    print("=== eaf_filename_hiddenStorage assignment, callback triggered by eafUploadTextArea change: %s" % value)
+def storeEafFilename(value):
+    print("=== storeEafFilename, callback triggered by eafUploadTextArea change: %s" % value)
     eafFileName = value.split(":")[0]
     return(eafFileName)
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(
-    Output('tierIDsBlankDiv', 'children'),
+    Output('tierMapGui-div', 'children'),
     [Input("eaf_filename_hiddenStorage", 'children')])
 def createTierMappingMenusCallback(eafFilename):
+    print("createTierMappingMenusCallback, eaf_filename_hiddenStorage trigger")
     if(eafFilename == ""):
        return("")
     print("=== extract tier ids from %s" % (eafFilename))
@@ -734,15 +637,15 @@ def update_output(value):
 
 #----------------------------------------------------------------------------------------------------
 @app.callback(
-    Output('createWebPageInfoTextArea', 'value'),
+    Output('createWebPageStatus', 'children'),
     [Input('createWebPageButton', 'n_clicks')],
     [State('sound_filename_hiddenStorage', 'children'),
      State('eaf_filename_hiddenStorage',   'children'),
      State('projectDirectory_hiddenStorage', 'children'),
-     State('grammaticalTerms_filename_hiddenStorage', 'children'),
-     State('tierGuide_filename_hiddenStorage', 'children')])
+     State('grammaticalTerms_filename_hiddenStorage', 'children')])
+     #State('tierGuide_filename_hiddenStorage', 'children')])
 def createWebPageCallback(n_clicks, soundFileName, eafFileName, projectDirectory,
-                          grammaticalTermsFile, tierGuideFile):
+                          grammaticalTermsFile):
     if n_clicks is None:
         return("")
     print("=== create web page callback")
@@ -750,12 +653,11 @@ def createWebPageCallback(n_clicks, soundFileName, eafFileName, projectDirectory
     print(" phrases in: %s", projectDirectory)
     if(grammaticalTermsFile == ""):
         grammaticalTermsFile = None
-    html = createWebPage(eafFileName, projectDirectory, grammaticalTermsFile, tierGuideFile)
+    html = createWebPage(eafFileName, projectDirectory, grammaticalTermsFile, "tierGuide.yaml")
     absolutePath = os.path.abspath(os.path.join(projectDirectory, "text.html"))
     file = open(absolutePath, "w")
     file.write(html)
     file.close()
-    #url = 'file:///%s' % absolutePath
 
     #url = 'http://0.0.0.0:8050/%s/text.html' % projectDirectory
     #webbrowser.open(url, new=2)
@@ -839,6 +741,95 @@ def saveWebpage(n_clicks, projectTitle):
    createZipFile(projectTitle)
    return("wrote web page as zip file")
 
+# @app.callback(
+#     Output('tierMapGui-div', 'children'),
+#     [Input("eafFilename_hiddenStorage", 'children')])
+#def populateTierGuidePulldowns(filename):
+#    print("=== populateTierGuidePulldowns: %s" % filename)
+#    if filename == '':
+#        return ''
+#    # pdb.set_trace()
+#    return createTierMappingMenus("../inferno-threeLines/inferno-threeLines.eaf")
+#    #return html.Div(html.H3("hobo")) #createTierMappingMenus("../inferno-threeLines/inferno-threeLines.eaf")
+
+
+@app.callback(
+    Output('speechTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-speech', 'value')])
+def updateSpeechTier(value):
+    print("speech tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('translationTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-translation', 'value')])
+def updateTranslationTier(value):
+    print("translation tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemeTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morpheme', 'value')])
+def updateMorphemeTier(value):
+    print("morpheme tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemeGlossTier_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morphemeGloss', 'value')])
+def updateMorphemeGlossTier(value):
+    print("morphemeGloss tier user name: %s" % value)
+    return value
+
+@app.callback(
+    Output('morphemePacking_hiddenStorage', 'children'),
+    [Input('tierGuideMenu-morphemePacking', 'value')])
+def updateMorphemePackingUserChoice(value):
+    print("morphemePacking: %s" % value)
+    return value
+
+@app.callback(
+    Output('tierMappingChoicesResultDisplay', 'children'),
+    [Input('saveTierMappingSelectionsButton', 'n_clicks')],
+    [State('speechTier_hiddenStorage',        'children'),
+     State('translationTier_hiddenStorage',   'children'),
+     State('morphemeTier_hiddenStorage',      'children'),
+     State('morphemeGlossTier_hiddenStorage', 'children'),
+     State('morphemePacking_hiddenStorage',   'children'),
+     State('projectDirectory_hiddenStorage',  'children')])
+def saveTierMappingSelection(n_clicks, speechTier, translationTier, morphemeTier, morphemeGlossTier,
+                             morphemePacking, projectDirectory):
+    if n_clicks is None:
+        return("")
+    print("saveTierMappingSelectionsButton: %d" % n_clicks)
+    if(any([len(x) == 0 for x in [speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking]])):
+       print("not all tiers mapped")
+       return("Some choices not yet made.")
+
+    print("time to write tierGuide.yaml")
+    print("speechTier: %s" % speechTier)
+    print("translationTier: %s" % translationTier)
+    print("morphemeTier: %s" % morphemeTier)
+    print("morphemeGlossTier: %s" % morphemeGlossTier)
+    print("morphemePacking: %s" % morphemePacking)
+    saveTierGuide(projectDirectory, speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking)
+    return("Saved your selection to 'tierGuide.yaml'")
+
+#----------------------------------------------------------------------------------------------------
+def saveTierGuide(projectDirectory, speechTier, translationTier, morphemeTier, morphemeGlossTier, morphemePacking):
+
+    dict = {"speech": speechTier,
+            "translation": translationTier,
+            "morpheme": morphemeTier,
+            "morphemeGloss": morphemeGlossTier,
+            "morphemePacking": morphemePacking}
+
+    filename =  os.path.join(projectDirectory, "tierGuide.yaml")
+
+    with open(filename, 'w') as outfile:
+        yaml.dump(dict, outfile, default_flow_style=False)
+
+    print("saved tierMap to %s" % filename)
 
 #----------------------------------------------------------------------------------------------------
 def extractPhrases(soundFileFullPath, eafFileFullPath, projectDirectory):
